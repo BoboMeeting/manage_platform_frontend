@@ -1,5 +1,7 @@
 services:
   web:
+    # 强制指定 amd64 平台，避免 Docker 误拉 arm64 架构镜像导致 exec format error
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile

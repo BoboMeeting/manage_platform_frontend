@@ -7,8 +7,10 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 # 利用 Docker 层缓存：先只拷 package.json，装一次依赖
+# 注意：不能 --omit=dev，因为 Stage 2 builder 需要 typescript 来编译 next.config.ts
+# Stage 3 standalone 模式会自动剥离 devDeps，runtime 镜像不会变大
 COPY package.json package-lock.json* ./
-RUN npm ci --omit=dev || npm install --omit=dev
+RUN npm ci || npm install
 
 # ============================================================================
 # 阶段 2：构建 Next.js（需要 devDependencies 中的 typescript 等）
