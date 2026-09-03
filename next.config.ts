@@ -6,6 +6,9 @@ import type { NextConfig } from "next";
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:5080";
 
 const nextConfig: NextConfig = {
+  // 输出独立部署包：.next/standalone 内含最小化 node_modules，
+  // 便于构建体积更小的 Docker 镜像。
+  output: "standalone",
   async rewrites() {
     return [
       {

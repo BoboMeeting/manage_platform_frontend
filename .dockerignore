@@ -1,0 +1,32 @@
+# 依赖与产物（在镜像内重新生成）
+node_modules
+.next
+out
+build
+
+# 本地环境变量（不应进入镜像）
+.env*.local
+.env
+
+# IDE / 系统
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+*.pem
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# 类型检查产物
+*.tsbuildinfo
+
+# Docker 自身文件（避免递归）
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml

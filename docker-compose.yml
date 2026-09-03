@@ -1,0 +1,30 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 构建期注入的 BACKEND_URL 默认值（运行期可被 environment 覆盖）
+        BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:5080}
+    image: bobomeet-admin-web:latest
+    container_name: bobomeet-web
+    restart: unless-stopped
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      # 运行期后端地址
+      # - Linux 宿主机后端用 http://host.docker.internal:5080 或 http://172.17.0.1:5080
+      # - 后端也在 docker 网络中时改用服务名，如 http://backend:5080
+      BACKEND_URL: ${BACKEND_URL:-http://host.docker.internal:5080}
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+    # 让容器能访问宿主机的后端服务（Linux 上 host.docker.internal 默认不可用，需要 extra_hosts）
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
