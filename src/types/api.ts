@@ -90,6 +90,16 @@ export interface AiRole {
   updatedAt: string;
 }
 
+export interface LiveKitConfig {
+  url: string;
+  apiKey: string;
+  /** 脱敏后的 Secret（首尾各 2 位可见，其余 *）。 */
+  apiSecretMasked: string;
+  updatedAt: string;
+  /** true 表示值来自数据库保存；false 表示使用 appsettings 默认值兜底。 */
+  fromDatabase: boolean;
+}
+
 // ==================== 展示标签 ====================
 
 export const USER_ROLE_LABELS: Record<number, string> = {

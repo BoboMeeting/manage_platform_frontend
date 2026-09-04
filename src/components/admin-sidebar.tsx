@@ -2,17 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, LayoutDashboard, LogOut, Users, Video } from "lucide-react";
+import { Bot, LayoutDashboard, LogOut, Settings2, Users, Video } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { USER_ROLE_LABELS, type UserInfo } from "@/types/api";
+import { UserRole, USER_ROLE_LABELS, type UserInfo } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  /** 若有值，则要求角色 ≥ 此值才显示 */
+  minRole?: number;
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "仪表盘", icon: LayoutDashboard },
   { href: "/users", label: "用户管理", icon: Users },
   { href: "/rooms", label: "会议管理", icon: Video },
   { href: "/ai-roles", label: "AI 角色", icon: Bot },
+  { href: "/livekit", label: "LiveKit 配置", icon: Settings2, minRole: UserRole.SuperAdmin },
 ] as const;
 
 export function AdminSidebar({
@@ -24,6 +33,10 @@ export function AdminSidebar({
 }) {
   const pathname = usePathname();
 
+  const items = NAV_ITEMS.filter(
+    (it) => it.minRole === undefined || user.role >= it.minRole
+  );
+
   return (
     <aside className="bg-sidebar text-sidebar-foreground flex w-64 shrink-0 flex-col border-r">
       <div className="flex h-16 items-center gap-2 border-b px-6">
@@ -32,7 +45,7 @@ export function AdminSidebar({
       </div>
 
       <nav className="flex-1 space-y-1 p-3">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: Icon }) => {
           const active =
             pathname === href || pathname.startsWith(`${href}/`);
           return (
