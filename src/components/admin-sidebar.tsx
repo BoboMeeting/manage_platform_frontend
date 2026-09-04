@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, LayoutDashboard, LogOut, Settings2, Users, Video } from "lucide-react";
+import { Bot, LayoutDashboard, LogOut, Users, Video } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { UserRole, USER_ROLE_LABELS, type UserInfo } from "@/types/api";
+import { USER_ROLE_LABELS, type UserInfo } from "@/types/api";
 import { Button } from "@/components/ui/button";
 
 interface NavItem {
@@ -21,7 +21,6 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/users", label: "用户管理", icon: Users },
   { href: "/rooms", label: "会议管理", icon: Video },
   { href: "/ai-roles", label: "AI 角色", icon: Bot },
-  { href: "/livekit", label: "LiveKit 配置", icon: Settings2, minRole: UserRole.SuperAdmin },
 ] as const;
 
 export function AdminSidebar({
