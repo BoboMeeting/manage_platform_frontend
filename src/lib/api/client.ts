@@ -38,7 +38,9 @@ interface ApiFetchOptions extends Omit<RequestInit, "body"> {
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const headers = new Headers(options.headers as HeadersInit | undefined);
 
-  if (options.body !== undefined && !headers.has("Content-Type")) {
+  // FormData 由浏览器自动设置 multipart Content-Type（含 boundary），不能手动覆盖
+  const isForm = options.body instanceof FormData;
+  if (options.body !== undefined && !isForm && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   const token = getToken();
@@ -50,9 +52,11 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
     ...options,
     headers,
     body:
-      options.body !== undefined && typeof options.body !== "string"
-        ? JSON.stringify(options.body)
-        : (options.body as BodyInit | undefined),
+      options.body instanceof FormData
+        ? options.body
+        : options.body !== undefined && typeof options.body !== "string"
+          ? JSON.stringify(options.body)
+          : (options.body as BodyInit | undefined),
   });
 
   // 登录页自身的 401 由页面展示错误信息，不做跳转

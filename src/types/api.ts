@@ -90,6 +90,96 @@ export interface AiRole {
   updatedAt: string;
 }
 
+// ==================== 视频资源 ====================
+
+export const VideoProcessStatus = {
+  /** 上传中 */
+  Uploading: 0,
+  /** 探测中（ffprobe） */
+  Probing: 1,
+  /** 转码中 */
+  Transcoding: 2,
+  /** 打包中 */
+  Packaging: 3,
+  /** 字幕处理中 */
+  Subtitling: 4,
+  /** 深意分析中（Agent 服务） */
+  Analyzing: 5,
+  /** 就绪 */
+  Ready: 6,
+  /** 失败（可重试） */
+  Failed: 7,
+} as const;
+export type VideoProcessStatus =
+  (typeof VideoProcessStatus)[keyof typeof VideoProcessStatus];
+
+export const ShelfStatus = {
+  OffShelf: 0,
+  OnShelf: 1,
+} as const;
+export type ShelfStatus = (typeof ShelfStatus)[keyof typeof ShelfStatus];
+
+export const SubtitleSource = {
+  Uploaded: 0,
+  Extracted: 1,
+} as const;
+export type SubtitleSource = (typeof SubtitleSource)[keyof typeof SubtitleSource];
+
+export interface VideoResource {
+  id: string;
+  title: string;
+  description: string | null;
+  originalFileName: string;
+  fileSizeBytes: number;
+  durationMs: number | null;
+  width: number | null;
+  height: number | null;
+  storageKey: string;
+  hlsMasterKey: string | null;
+  deepMeaningKey: string | null;
+  processStatus: VideoProcessStatus;
+  shelfStatus: ShelfStatus;
+  failReason: string | null;
+  failedStage: VideoProcessStatus | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SubtitleTrack {
+  id: string;
+  videoResourceId: string;
+  language: string;
+  label: string | null;
+  isDefault: boolean;
+  source: SubtitleSource;
+  storageKey: string;
+  cueCount: number;
+  originalFileName: string;
+  createdAt: string;
+}
+
+export interface VideoStatusEvent {
+  id: string;
+  videoResourceId: string;
+  stage: VideoProcessStatus;
+  /** running / succeeded / failed */
+  status: string;
+  message: string | null;
+  createdAt: string;
+}
+
+export interface VideoDetail {
+  video: VideoResource;
+  subtitles: SubtitleTrack[];
+  events: VideoStatusEvent[];
+}
+
+export interface PlayUrlResponse {
+  url: string;
+  expiresInSeconds: number;
+}
+
 // ==================== 展示标签 ====================
 
 export const USER_ROLE_LABELS: Record<number, string> = {
@@ -110,3 +200,24 @@ export const ROOM_STATUS_LABELS: Record<number, string> = {
   [MeetingRoomStatus.Closed]: "已关闭",
   [MeetingRoomStatus.Cancelled]: "已取消",
 };
+
+export const VIDEO_STATUS_LABELS: Record<number, string> = {
+  [VideoProcessStatus.Uploading]: "上传中",
+  [VideoProcessStatus.Probing]: "探测中",
+  [VideoProcessStatus.Transcoding]: "转码中",
+  [VideoProcessStatus.Packaging]: "打包中",
+  [VideoProcessStatus.Subtitling]: "字幕处理",
+  [VideoProcessStatus.Analyzing]: "深意分析",
+  [VideoProcessStatus.Ready]: "就绪",
+  [VideoProcessStatus.Failed]: "失败",
+};
+
+/** 处理中状态集合（列表页据此自动轮询） */
+export const VIDEO_PROCESSING_STATUSES = [
+  VideoProcessStatus.Uploading,
+  VideoProcessStatus.Probing,
+  VideoProcessStatus.Transcoding,
+  VideoProcessStatus.Packaging,
+  VideoProcessStatus.Subtitling,
+  VideoProcessStatus.Analyzing,
+] as const;
