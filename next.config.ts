@@ -9,9 +9,12 @@ const nextConfig: NextConfig = {
   // 输出独立部署包：.next/standalone 内含最小化 node_modules，
   // 便于构建体积更小的 Docker 镜像。
   output: "standalone",
-  // rewrites 代理默认只转发请求体前 10MB，视频上传会被截断导致后端 400；
-  // 与后端 Kestrel/FormOptions 的 2GB 上限对齐。
-  middlewareClientMaxBodySize: "2gb",
+  experimental: {
+    // rewrites 代理默认只转发请求体前 10MB，视频上传会被截断导致后端 400；
+    // 与后端 Kestrel/FormOptions 的 2GB 上限对齐。
+    // 注意：Next 15.x 中该配置位于 experimental 下（顶层写法是 Next 16 的）。
+    middlewareClientMaxBodySize: "2gb",
+  },
   async rewrites() {
     return [
       {
