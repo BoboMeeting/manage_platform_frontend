@@ -1,4 +1,4 @@
-import { apiFetch, getToken } from "./client";
+import { apiFetch, ApiError, getToken } from "./client";
 import type {
   KbDocument,
   KbIngestEvent,
@@ -129,7 +129,7 @@ export function uploadDocument(
           payload && typeof payload === "object" && "error" in payload
             ? String((payload as { error: unknown }).error)
             : `上传失败（HTTP ${xhr.status}）`;
-        reject(new Error(message));
+        reject(new ApiError(xhr.status, message, payload));
       }
     };
     xhr.onerror = () => reject(new Error("网络错误，上传中断"));
