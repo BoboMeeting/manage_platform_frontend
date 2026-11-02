@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, Film, LayoutDashboard, LogOut, Users, Video } from "lucide-react";
+import { BookOpen, Bot, Film, LayoutDashboard, LogOut, Users, Video } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { USER_ROLE_LABELS, type UserInfo } from "@/types/api";
@@ -21,6 +21,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/users", label: "用户管理", icon: Users },
   { href: "/rooms", label: "会议管理", icon: Video },
   { href: "/videos", label: "视频资源", icon: Film },
+  { href: "/knowledge", label: "知识库", icon: BookOpen },
   { href: "/ai-roles", label: "AI 角色", icon: Bot },
 ] as const;
 

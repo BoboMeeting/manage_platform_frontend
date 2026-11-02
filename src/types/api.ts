@@ -180,6 +180,97 @@ export interface PlayUrlResponse {
   expiresInSeconds: number;
 }
 
+// ==================== 知识库（RAG） ====================
+
+export const KbStatus = {
+  Enabled: 0,
+  Disabled: 1,
+} as const;
+export type KbStatus = (typeof KbStatus)[keyof typeof KbStatus];
+
+export const KbDocumentStatus = {
+  /** 已入队，等待解析 */
+  Pending: 0,
+  /** 解析中 */
+  Parsing: 1,
+  /** 切分 / embedding / 入库中 */
+  Indexing: 2,
+  /** 就绪，可被检索 */
+  Ready: 3,
+  /** 失败（可重试） */
+  Failed: 4,
+} as const;
+export type KbDocumentStatus =
+  (typeof KbDocumentStatus)[keyof typeof KbDocumentStatus];
+
+export interface KnowledgeBase {
+  id: string;
+  name: string;
+  description: string | null;
+  embeddingModel: string;
+  embeddingDim: number;
+  chunkSize: number;
+  chunkOverlap: number;
+  status: KbStatus;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 列表项：实体 + 文档总数与各状态计数 */
+export interface KnowledgeBaseListItem {
+  knowledgeBase: KnowledgeBase;
+  documentCount: number;
+  readyCount: number;
+  processingCount: number;
+  failedCount: number;
+}
+
+export interface KbDocument {
+  id: string;
+  knowledgeBaseId: string;
+  title: string;
+  originalFileName: string;
+  contentType: string | null;
+  fileSizeBytes: number;
+  storageKey: string;
+  checksum: string | null;
+  status: KbDocumentStatus;
+  errorMessage: string | null;
+  chunkCount: number;
+  indexedAt: string | null;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KbIngestEvent {
+  id: string;
+  documentId: string;
+  /** Parse / Chunk / Embed / Persist */
+  stage: string;
+  /** running / succeeded / failed */
+  status: string;
+  message: string | null;
+  createdAt: string;
+}
+
+export interface KbSearchHit {
+  chunkId: string;
+  documentId: string;
+  documentTitle: string;
+  headingPath: string | null;
+  pageNo: number | null;
+  content: string;
+  score: number;
+}
+
+export interface KnowledgeSearchResponse {
+  query: string;
+  elapsedMs: number;
+  hits: KbSearchHit[];
+}
+
 // ==================== 展示标签 ====================
 
 export const USER_ROLE_LABELS: Record<number, string> = {
@@ -221,3 +312,23 @@ export const VIDEO_PROCESSING_STATUSES = [
   VideoProcessStatus.Subtitling,
   VideoProcessStatus.Analyzing,
 ] as const;
+
+export const KB_STATUS_LABELS: Record<number, string> = {
+  [KbStatus.Enabled]: "启用",
+  [KbStatus.Disabled]: "停用",
+};
+
+export const KB_DOCUMENT_STATUS_LABELS: Record<number, string> = {
+  [KbDocumentStatus.Pending]: "排队中",
+  [KbDocumentStatus.Parsing]: "解析中",
+  [KbDocumentStatus.Indexing]: "索引中",
+  [KbDocumentStatus.Ready]: "就绪",
+  [KbDocumentStatus.Failed]: "失败",
+};
+
+/** 处理中状态集合（详情页据此自动轮询） */
+export const KB_DOCUMENT_PROCESSING_STATUSES: readonly KbDocumentStatus[] = [
+  KbDocumentStatus.Pending,
+  KbDocumentStatus.Parsing,
+  KbDocumentStatus.Indexing,
+];
