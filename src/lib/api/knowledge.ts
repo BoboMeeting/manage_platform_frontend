@@ -89,6 +89,14 @@ export function searchKnowledge(kbId: string, query: string, topK?: number) {
   );
 }
 
+/** 重建索引：该库全部文档重新解析、切分并重算向量（后端全量重建） */
+export function reindexKnowledgeBase(kbId: string) {
+  return apiFetch<{ enqueued: number }>(
+    `/api/admin/knowledge-bases/${kbId}/reindex`,
+    { method: "POST" }
+  );
+}
+
 /**
  * 上传文档（multipart，XMLHttpRequest 以获得上传进度）。
  * 后端返回 202，解析/切分/embedding/入库由后台 Worker 完成。

@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import {
   ArrowLeft,
   AlertCircle,
+  Database,
   FileText,
   FileUp,
   Loader2,
@@ -22,6 +23,7 @@ import {
   deleteDocument,
   getKnowledgeBase,
   listDocuments,
+  reindexKnowledgeBase,
   retryDocument,
   updateKnowledgeBase,
 } from "@/lib/api/knowledge";
@@ -37,6 +39,16 @@ import {
 } from "@/types/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Table,
   TableBody,
@@ -102,6 +114,10 @@ export default function KnowledgeDetailPage() {
   // 删除确认弹窗
   const [deleteTarget, setDeleteTarget] = useState<KbDocument | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // 重建索引确认弹窗（全量重建）
+  const [reindexOpen, setReindexOpen] = useState(false);
+  const [reindexing, setReindexing] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,6 +196,21 @@ export default function KnowledgeDetailPage() {
     }
   }
 
+  /** 重建索引：全库全量重建（删除旧 chunk 后重新切分、重算向量） */
+  async function onReindex() {
+    setReindexing(true);
+    try {
+      const res = await reindexKnowledgeBase(kbId);
+      toast.success(`已重新入队 ${res.enqueued} 篇文档，正在后台重建`);
+      setReindexOpen(false);
+      await load();
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : "重建索引失败");
+    } finally {
+      setReindexing(false);
+    }
+  }
+
   // Tab 筛选后的列表（本地过滤，不重请求后端）
   const filteredDocuments = useMemo(() => {
     const allowed = TAB_STATUS_FILTERS[statusFilter];
@@ -248,6 +279,14 @@ export default function KnowledgeDetailPage() {
               <Button variant="outline" onClick={() => setSearchOpen(true)}>
                 <Search className="size-4" />
                 检索调试
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setReindexOpen(true)}
+                disabled={total === 0}
+              >
+                <Database className="size-4" />
+                重建索引
               </Button>
               <Button onClick={() => setUploadOpen(true)}>
                 <Upload className="size-4" />
@@ -438,7 +477,83 @@ export default function KnowledgeDetailPage() {
         confirming={deleting}
         onConfirm={onConfirmDelete}
       />
+      <ReindexAlert
+        open={reindexOpen}
+        onOpenChange={setReindexOpen}
+        kbName={kb?.name ?? ""}
+        chunkSize={kb?.chunkSize}
+        chunkOverlap={kb?.chunkOverlap}
+        documentCount={total}
+        confirming={reindexing}
+        onConfirm={onReindex}
+      />
     </div>
+  );
+}
+
+/** 重建索引二次确认弹窗：明确「全量重算」语义与检索影响 */
+function ReindexAlert({
+  open,
+  onOpenChange,
+  kbName,
+  chunkSize,
+  chunkOverlap,
+  documentCount,
+  confirming,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  kbName: string;
+  chunkSize?: number;
+  chunkOverlap?: number;
+  documentCount: number;
+  confirming?: boolean;
+  onConfirm: () => void;
+}) {
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <Database className="size-5" />
+            重建索引
+          </AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-1">
+              <p>
+                将重新解析并重建知识库{" "}
+                <strong className="text-foreground">「{kbName}」</strong> 全部{" "}
+                {documentCount} 篇文档的索引。
+              </p>
+              <p className="text-xs">
+                会删除现有片段，按当前切分参数（{chunkSize}/{chunkOverlap}）重新切分并
+                重算向量。重建期间该库的检索结果可能不完整，文档较多时耗时较长。
+              </p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={confirming}>取消</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={confirming}
+            onClick={(e: React.MouseEvent) => {
+              e.preventDefault();
+              onConfirm();
+            }}
+          >
+            {confirming ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                提交中…
+              </>
+            ) : (
+              "开始重建"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
