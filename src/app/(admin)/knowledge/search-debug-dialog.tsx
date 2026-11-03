@@ -101,6 +101,8 @@ export function SearchDebugDialog({
           <div className="space-y-3">
             <div className="text-muted-foreground flex items-center gap-2 text-xs">
               命中 {result.hits.length} 段 · 耗时 {result.elapsedMs}ms
+              {result.rerankElapsedMs != null &&
+                ` · rerank ${result.rerankElapsedMs}ms`}
             </div>
             {result.hits.length === 0 ? (
               <div className="text-muted-foreground rounded-lg border py-8 text-center text-sm">
@@ -110,8 +112,11 @@ export function SearchDebugDialog({
               <ol className="space-y-2">
                 {result.hits.map((hit, index) => (
                   <li key={hit.chunkId} className="rounded-lg border p-3">
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex flex-wrap items-center gap-2 text-xs">
                       <Badge variant="outline">#{index + 1}</Badge>
+                      {hit.retrievalSource && (
+                        <Badge variant="outline">{hit.retrievalSource}</Badge>
+                      )}
                       <span className="font-medium">{hit.documentTitle}</span>
                       {hit.headingPath && (
                         <span className="text-muted-foreground truncate">
@@ -124,6 +129,11 @@ export function SearchDebugDialog({
                       <span className="text-muted-foreground ml-auto">
                         相似度 {hit.score.toFixed(4)}
                       </span>
+                      {hit.rerankScore != null && (
+                        <span className="text-muted-foreground">
+                          精排 {hit.rerankScore.toFixed(4)}
+                        </span>
+                      )}
                     </div>
                     <p className="text-muted-foreground mt-2 line-clamp-4 text-xs whitespace-pre-wrap">
                       {hit.content}

@@ -262,12 +262,19 @@ export interface KbSearchHit {
   headingPath: string | null;
   pageNo: number | null;
   content: string;
+  /** 向量余弦相似度 */
   score: number;
+  /** rerank 精排分数；未启用 rerank 或精排降级时为 null */
+  rerankScore?: number | null;
+  /** 召回路径：dense / hybrid（P4 起出现） */
+  retrievalSource?: string;
 }
 
 export interface KnowledgeSearchResponse {
   query: string;
   elapsedMs: number;
+  /** rerank 阶段耗时；未调用 rerank 时为 null */
+  rerankElapsedMs?: number | null;
   hits: KbSearchHit[];
 }
 
